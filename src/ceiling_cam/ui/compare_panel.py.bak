@@ -1,0 +1,76 @@
+"""ずれ量の比較表（入力 / 推定 / 誤差）
+
+Phase 7: 入力行が "—" でない数値であれば、誤差行は「推定 - 入力」で計算する。
+"""
+
+from __future__ import annotations
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QGridLayout, QGroupBox, QLabel, QVBoxLayout, QWidget
+
+from ..config.schema import CameraOffset
+
+_KEYS = ["dx_mm", "dy_mm", "dz_mm", "dpitch_deg", "dyaw_deg", "droll_deg"]
+_HEADERS = ["dx [mm]", "dy [mm]", "dz [mm]", "pitch [deg]", "yaw [deg]", "roll [deg]"]
+
+
+class ComparePanel(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._labels_input: dict[str, QLabel] = {}
+        self._labels_est: dict[str, QLabel] = {}
+        self._labels_err: dict[str, QLabel] = {}
+        self._truth_cache: dict[str, float] = {k: 0.0 for k in _KEYS}
+
+        gb = QGroupBox("ずれ量の比較（入力 vs 推定）")
+        grid = QGridLayout(gb)
+        grid.setHorizontalSpacing(20)
+        grid.setVerticalSpacing(6)
+
+        grid.addWidget(QLabel(""), 0, 0)
+        for c, h in enumerate(_HEADERS, start=1):
+            lbl = QLabel(h)
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            f = QFont(); f.setBold(True); lbl.setFont(f)
+            grid.addWidget(lbl, 0, c)
+
+        for r, (title, store) in enumerate([
+            ("入力ずれ", self._labels_input),
+            ("推定ずれ", self._labels_est),
+            ("誤差",     self._labels_err),
+        ], start=1):
+            lbl = QLabel(title)
+            f = QFont(); f.setBold(True); lbl.setFont(f)
+            grid.addWidget(lbl, r, 0)
+            for c, key in enumerate(_KEYS, start=1):
+                v = QLabel("—")
+                v.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                v.setMinimumWidth(80)
+                grid.addWidget(v, r, c)
+                store[key] = v
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.addWidget(gb)
+
+    def set_input_offset(self, off: CameraOffset) -> None:
+        for k in _KEYS:
+            v = getattr(off, k)
+            self._truth_cache[k] = float(v)
+            self._labels_input[k].setText(_fmt(v))
+
+    def set_estimated_offset(self, est: dict[str, float] | None) -> None:
+        if est is None:
+            for k in _KEYS:
+                self._labels_est[k].setText("—")
+                self._labels_err[k].setText("—")
+            return
+        for k in _KEYS:
+            self._labels_est[k].setText(_fmt(est[k]))
+            err = est[k] - self._truth_cache.get(k, 0.0)
+            self._labels_err[k].setText(_fmt(err))
+
+
+def _fmt(v: float) -> str:
+    return f"{v:+.3f}"

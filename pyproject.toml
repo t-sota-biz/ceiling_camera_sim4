@@ -1,0 +1,56 @@
+[project]
+name = "ceiling-cam"
+version = "0.1.0"
+description = "Ceiling-mounted camera calibration verification tool"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "ceiling-cam dev" }]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "opencv-python>=4.9",
+    "pyvista>=0.43",
+    "pyvistaqt>=0.11",
+    "PySide6>=6.6",
+    "pyqtdarktheme>=2.1",
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "loguru>=0.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-qt>=4.4",
+    "pytest-env>=1.1",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+ceiling-cam = "ceiling_cam.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ceiling_cam"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+env = [
+    "QT_QPA_PLATFORM=offscreen",
+]
+markers = [
+    "slow: 推定テストなど時間のかかるテスト",
+]

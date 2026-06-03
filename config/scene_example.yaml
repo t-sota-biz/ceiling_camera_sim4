@@ -1,0 +1,14 @@
+# サンプルシーン: 広めの部屋・低めの天井
+# default.yaml の値を上書きする想定（loader で deep-merge）
+
+camera:
+  intrinsics:
+    width: 1920
+    height: 1080
+    fov_h_deg: 90.0
+  extrinsics_base:
+    position_mm: [3000.0, 3000.0, 2500.0]
+
+scene:
+  room:
+    size_mm: [6000.0, 6000.0, 2500.0]
